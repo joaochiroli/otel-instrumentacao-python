@@ -3,8 +3,7 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 import sys
 
-# Create Flask application instance - CORREÇÃO AQUI
-app = Flask(__name__)  # __name__ com underscores duplos, não 'name'
+app = Flask(__name__) 
 
 # Configure logging
 logging.basicConfig(
