@@ -32,4 +32,4 @@ ENV OTEL_LOGS_EXPORTER={OTEL_LOGS_EXPORTER}
 EXPOSE 8080
 
 # Comando para rodar a aplicação
-CMD ["opentelemetry-instrument","--traces_exporter", "otlp,console", "--metrics_exporter", "otlp,console", "--logs_exporter", "otlp,console", "--service_name", "sfz-python", "flask", "run", "-p", "8080"]
+CMD ["opentelemetry-instrument","--traces_exporter", "otlp,console", "--metrics_exporter", "otlp,console", "--logs_exporter", "otlp,console", "--service_name", "flask-python", "flask", "run", "-p", "8080"]
