@@ -1,0 +1,4 @@
+flask 
+fastapi 
+opentelemetry-distro 
+opentelemetry-exporter-otlp

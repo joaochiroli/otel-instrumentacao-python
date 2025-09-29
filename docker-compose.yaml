@@ -1,0 +1,87 @@
+services:
+  # db:
+  #   image: postgres:14.15
+  #   container_name: postgres-db
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_DB: simple_app
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   healthcheck: # verifica se o db esta pronto para os outros servicos
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
+  #   networks:
+  #     - app-network
+
+  otel-lgtm:
+    image: grafana/otel-lgtm
+    container_name: otel-lgtm
+    ports:
+      - "4317:4317" # OTLP gRPC receiver
+      # - "4318:4318" # OTLP HTTP receiver
+      - "3000:3000" # Grafana UI
+    # networks:
+    #   - app-network
+    restart: unless-stopped
+  # app:
+  #   build: .
+  #   container_name: flask-app
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - "5000:5000"
+  #   environment:
+  #     DB_HOST: db
+  #     DB_PORT: 5432
+  #     DB_NAME: simple_app
+  #     DB_USER: postgres
+  #     DB_PASSWORD: postgres
+  #     FLASK_ENV: development
+  #     FLASK_DEBUG: "true"
+  #     OTEL_SERVICE_NAME: flask-api
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-lgtm:4318
+  #     OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+  #     OTEL_EXPORTER_OTLP_INSECURE: "true"
+  #     OTEL_TRACES_EXPORTER: console,otlp
+  #     OTEL_METRICS_EXPORTER: console,otlp
+  #     OTEL_LOGS_EXPORTER: console,otlp
+  #     OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: "true"
+  #     OTEL_LOG_LEVEL: DEBUG
+  #     OTEL_PYTHON_LOG_CORRELATION: "true"
+  #     OTEL_TRACES_SAMPLER: "always_on"
+  #     OTEL_TRACES_SAMPLER_ARG: "1.0"
+  #     # OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: ""
+  #     # OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_REQUEST: ".*"
+  #     # OTEL_INSTRUMENTATION_HTTP_CAPTURE_HEADERS_SERVER_RESPONSE: ".*"
+  #   networks:
+  #     - app-network
+  #   # depends_on:
+  #   #   db:
+  #   #     condition: service_healthy
+
+  # otel-collector:
+  #   image: grafana/otel-lgtm
+  #   container_name: otel-collector
+  #   command: ["--config=./otel-collector-config.yaml"]
+  #   volumes:
+  #     - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+  #   ports:
+  #     - "4317:4317"   # OTLP gRPC receiver
+  #     - "4318:4318"   # OTLP HTTP receiver
+  #     - "8888:8888"   # Prometheus metrics
+  #     - "8889:8889"   # Prometheus exporter metrics
+  #   depends_on:
+  #     - app
+  #   networks:
+  #     - app-network
+# volumes:
+#   postgres_data:
+
+# networks:
+#   app-network:
+#     driver: bridge
