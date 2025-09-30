@@ -17,17 +17,6 @@ services:
       retries: 10
     networks:
       - app-network
-
-  otel-lgtm:
-    image: grafana/otel-lgtm
-    container_name: otel-lgtm
-    ports:
-      - "4317:4317" # OTLP gRPC receiver
-      # - "4318:4318" # OTLP HTTP receiver
-      - "3000:3000" # Grafana UI
-    networks:
-      - app-network
-    restart: unless-stopped
   app:
     build: .
     container_name: flask-app
@@ -44,20 +33,20 @@ services:
       FLASK_ENV: development
       FLASK_DEBUG: "true"
       OTEL_SERVICE_NAME: flask-api
-      OTEL_EXPORTER_OTLP_ENDPOINT: otel-lgtm:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_EXPORTER_OTLP_INSECURE: "true"
       OTEL_TRACES_EXPORTER: console,otlp
       OTEL_METRICS_EXPORTER: console,otlp
       OTEL_LOGS_EXPORTER: console,otlp
       OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED: "true"
-      # OTEL_LOG_LEVEL: DEBUG
       OTEL_PYTHON_LOG_CORRELATION: "true"
       OTEL_PYTHON_FLASK_ENABLED: "true"
       OTEL_PYTHON_SQLALCHEMY_ENABLED: "true"
       OTEL_PYTHON_REQUESTS_ENABLED: "true"
       OTEL_TRACES_SAMPLER: always_on
       OTEL_METRICS_SAMPLER: always_on
+      # OTEL_LOG_LEVEL: DEBUG
       # OTEL_TRACES_SAMPLER: "always_on"
       # OTEL_TRACES_SAMPLER_ARG: "1.0"
       # OTEL_PYTHON_DISABLED_INSTRUMENTATIONS: ""
@@ -69,23 +58,58 @@ services:
       db:
         condition: service_healthy
 
-  # otel-collector:
-  #   image: grafana/otel-lgtm
-  #   container_name: otel-collector
-  #   command: ["--config=./otel-collector-config.yaml"]
-  #   volumes:
-  #     - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
-  #   ports:
-  #     - "4317:4317"   # OTLP gRPC receiver
-  #     - "4318:4318"   # OTLP HTTP receiver
-  #     - "8888:8888"   # Prometheus metrics
-  #     - "8889:8889"   # Prometheus exporter metrics
-  #   depends_on:
-  #     - app
-  #   networks:
-  #     - app-network
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC receiver
+      - "4318:4318" # OTLP HTTP receiver
+      - "8888:8888" # Prometheus metrics
+      - "8889:8889" # Prometheus exporter metrics
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - LOG_LEVEL=debug
+    ports:
+      - "16686:16686" # Jaeger UI
+      # - "4317:4317" # OTLP gRPC receiver
+      # - "4318:4318" # OTLP HTTP receiver
+      - "14250:14250" # Jaeger gRPC
+      - "14268:14268" # Jaeger HTTP
+    networks:
+      - app-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - app-network
+    depends_on:
+      - otel-collector
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  prometheus-data:
 
 networks:
   app-network:
