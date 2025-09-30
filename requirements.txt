@@ -2,3 +2,11 @@ flask
 fastapi 
 opentelemetry-distro 
 opentelemetry-exporter-otlp
+Flask-SQLAlchemy
+psycopg2-binary
+python-dotenv
+opentelemetry-instrumentation-flask
+opentelemetry-instrumentation-sqlalchemy
+opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-wsgi
+flask_sqlalchemy
