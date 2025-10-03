@@ -1,0 +1,81 @@
+# flask-app-deployment.yaml - VERSÃO CORRIGIDA
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-app
+  namespace: simple-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-app
+  template:
+    metadata:
+      labels:
+        app: flask-app
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: "simple-app/flask-instrumentation"
+    spec:
+      containers:
+      - name: flask-app
+        image: joaochiroli123/app-flask:latest
+        ports:
+        - containerPort: 5000
+          name: http
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-password
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-db
+        - name: POSTGRES_HOST
+          value: "postgres" 
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: FLASK_ENV
+          value: "development"
+        - name: FLASK_DEBUG
+          value: "false"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-app
+  namespace: simple-app
+spec:
+  selector:
+    app: flask-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5000
+  type: ClusterIP

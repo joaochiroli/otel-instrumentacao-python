@@ -1,0 +1,10 @@
+# configmap-app.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flask-app-config
+  namespace: simple-app
+data:
+  DATABASE_URL: "postgresql://postgres:postgres@postgres-db:5432/simple_app"
+  FLASK_ENV: "development"
+  FLASK_DEBUG: "false"
