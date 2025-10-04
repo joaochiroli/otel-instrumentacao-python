@@ -31,4 +31,4 @@ spec:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
         value: http://otel-collector-collector-headless.simple-app.svc.cluster.local:4318
   exporter:
-    endpoint: http://otel-collector-collector-headless.simple-app.svc.cluster.local:4318s
+    endpoint: http://otel-collector-collector-headless.simple-app.svc.cluster.local:4318
